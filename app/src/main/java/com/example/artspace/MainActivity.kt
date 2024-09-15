@@ -14,27 +14,31 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.artspace.ui.theme.ArtSpaceTheme
+import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,18 +54,35 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ArtSpaceLayout(modifier: Modifier = Modifier) {
     Column(modifier = Modifier.fillMaxSize()) {
+        var currentPictureID by remember { mutableIntStateOf(0) }
+
         MainImage(
+            currentPictureID,
             modifier = modifier
                 .weight(0.7f)
                 .shadow(Color.Gray, 15.dp, 70.dp, 20.dp)
         )
-        ImageDescription(modifier = modifier.weight(0.2f))
-        ControllerButtons(modifier = modifier.weight(0.1f))
+        ImageDescription(currentPictureID, modifier = modifier.weight(0.2f))
+        ControllerButtons(
+            onPreviousPictureClick = {
+                currentPictureID -= 1
+                if (currentPictureID < 0) {
+                    currentPictureID = 0
+                };
+            },
+            onNextPictureClick = {
+                currentPictureID += 1
+                if (currentPictureID > 2) {
+                    currentPictureID = 2
+                };
+            },
+            modifier = modifier.weight(0.1f)
+        )
     }
 }
 
 @Composable
-fun MainImage(modifier: Modifier = Modifier) {
+fun MainImage(currentPictureID: Int, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -70,7 +91,7 @@ fun MainImage(modifier: Modifier = Modifier) {
             .background(Color.White)
     ) {
         Image(
-            painter = painterResource(R.drawable.avatar),
+            painter = painterResource(getImageResource(currentPictureID)),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -81,7 +102,7 @@ fun MainImage(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ImageDescription(modifier: Modifier = Modifier) {
+fun ImageDescription(currentPictureID: Int, modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -90,30 +111,72 @@ fun ImageDescription(modifier: Modifier = Modifier) {
             .padding(32.dp)
             .background(Color(0xFFECEBF3))
     ) {
-        Text(text = "Avatar", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text(text = "2017")
+        Text(
+            text = stringResource(getImageName(currentPictureID)),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(text = getImageCrateYear(currentPictureID).toString())
     }
 }
 
 @Composable
-fun ControllerButtons(modifier: Modifier = Modifier) {
+fun ControllerButtons(
+    onPreviousPictureClick: () -> Unit,
+    onNextPictureClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxSize()
     ) {
-        Button(modifier = Modifier
-            .padding(16.dp)
-            .weight(1.0f), onClick = { /*TODO*/ }) {
+        Button(
+            onClick = {
+                onPreviousPictureClick.invoke()
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .weight(1.0f)
+        ) {
             Text(text = "Previous")
         }
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        Button(modifier = Modifier
-            .padding(16.dp)
-            .weight(1.0f), onClick = { /*TODO*/ }) {
+        Button(
+            onClick = {
+                onNextPictureClick.invoke()
+            },
+            modifier = Modifier
+                .padding(16.dp)
+                .weight(1.0f)
+        ) {
             Text(text = "Next")
         }
+    }
+}
+
+fun getImageResource(id: Int): Int {
+    return when (id) {
+        1 -> R.drawable.lemonade
+        2 -> R.drawable.tender
+        else -> R.drawable.avatar
+    }
+}
+
+fun getImageName(id: Int): Int {
+    return when (id) {
+        1 -> R.string.lemonade_name
+        2 -> R.string.tender_name
+        else -> R.string.avatar_name
+    }
+}
+
+fun getImageCrateYear(id: Int): Int {
+    return when (id) {
+        1 -> 2018
+        2 -> 2019
+        else -> 2017
     }
 }
 
